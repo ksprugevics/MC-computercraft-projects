@@ -1,4 +1,4 @@
-local mon = peripheral.wrap("monitor_3")
+local mon = peripheral.wrap("monitor_2")
 local w, h = mon.getSize()
 
 function initialScreen()
@@ -124,11 +124,11 @@ function calculateWinnings(res, bet)
     local r3 = res["3rd"]
  
     local coefTable2 = {}
-    coefTable2[0] = 0
-    coefTable2[1] = 1
-    coefTable2[2] = 1
-    coefTable2[3] = 2
-    coefTable2[4] = 2
+    coefTable2[0] = 1
+    coefTable2[1] = 2
+    coefTable2[2] = 2
+    coefTable2[3] = 3
+    coefTable2[4] = 4
  
     local coefTable3 = {}
     coefTable3[0] = 3
