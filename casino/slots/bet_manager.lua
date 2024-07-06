@@ -88,6 +88,7 @@ end
 while true do
     reward = 0
     if redstone.getInput("right")then 
+        print("aaa")
 
         -- Read input bet
         local bet = calculateBet()
