@@ -92,12 +92,25 @@ end
 -- logic methods
 function spin(animationSleepTime, spinCountOffset)
 
-    local r1 = weightedRandom()
-    local r2 = weightedRandom()
-    local r3 = weightedRandom()
-    local r4 = weightedRandom()
-    local r5 = weightedRandom()
+    local elements = {}
+    if isWin() then
+        print("win")
+        local combo = weightedRandomCombo()
+        print(combo[1] .. " " .. combo[2])
+        elements = setElements(combo[1], combo[2])
+    else
+        print("lose")
+        elements = setElementsNoMoreThanTwice()
+    end
+
+    local r1 = elements[1]
+    local r2 = elements[2]
+    local r3 = elements[3]
+    local r4 = elements[4]
+    local r5 = elements[5]
     
+    print("r1 " .. tostring(r1) .. " r2: " .. tostring(r2) .. " r3: " ..  tostring(r3) .. " r4: " ..  tostring(r4) .. " r5: " ..  tostring(r5))
+
     -- Calculate how many times the column will spin
     local s1 = r1 + 3 * spinCountOffset
     local s2 = r2 + 4 * spinCountOffset
@@ -156,26 +169,110 @@ function spin(animationSleepTime, spinCountOffset)
         sleep(animationSleepTime)
     end
  
-    print("r1 " .. tostring(r1) .. " r2: " .. tostring(r2) .. " r3: " ..  tostring(r3) .. " r4: " ..  tostring(r4) .. " r5: " ..  tostring(r5))
     return {r1, r2, r3, r4, r5}
 end
 
-function weightedRandom()
+function isWin()
     local r = math.random(1, 100)
-    print(r)
-    if r >= 1 and r < weights[1] then
-        return 1
-    elseif r >= weights[1] and r < weights[2] then
-        return 2
-    elseif r >= weights[2] and r < weights[3] then
-        return 3
-    elseif r >= weights[3] and r < weights[4] then
-        return 4
-    elseif r >= weights[4] and r <=100 then
-        return 5
+    print("rwin " .. r)
+    if r >= 1 and r <= winChance then
+        return true
+    end
+
+    return false
+end
+
+function weightedRandomCombo()
+    local r = math.random(1, 176)
+    print("combo r: " .. r)
+    if r >= 1 and r < weightsCombo[1] then -- 1 to 44
+        return {1, 3}
+    elseif r >= weightsCombo[1] and r < weightsCombo[2] then -- 45 to 67
+        return {1, 4}
+    elseif r >= weightsCombo[2] and r < weightsCombo[3] then -- 68 to 78
+        return {1, 5}
+    elseif r >= weightsCombo[3] and r < weightsCombo[4] then -- 79 to 103
+        return {2, 3}
+    elseif r >= weightsCombo[4] and r < weightsCombo[5] then -- 104 to 115
+        return {2, 4}
+    elseif r >= weightsCombo[5] and r < weightsCombo[6] then -- 116 to 121
+        return {2, 5}
+    elseif r >= weightsCombo[6] and r < weightsCombo[7] then -- 122 to 136
+        return {3, 3}
+    elseif r >= weightsCombo[7] and r < weightsCombo[8] then -- 137 to 144
+        return {3, 4}
+    elseif r >= weightsCombo[8] and r < weightsCombo[9] then -- 145 to 148
+        return {3, 5}
+    elseif r >= weightsCombo[9] and r < weightsCombo[10] then -- 149 to 158
+        return {4, 3}
+    elseif r >= weightsCombo[10] and r < weightsCombo[11] then -- 159 to 163
+        return {4, 4}
+    elseif r >= weightsCombo[11] and r < weightsCombo[12] then -- 164 to 166
+        return {4, 5}
+    elseif r >= weightsCombo[12] and r < weightsCombo[13] then -- 167 to 171
+        return {5, 3}
+    elseif r >= weightsCombo[13] and r < weightsCombo[14] then -- 172 to 174
+        return {5, 4}
+    elseif r >= weightsCombo[14] and r < weightsCombo[15] then -- 175 to 175
+        return {5, 5}
+    end
+
+    return {colors.lightGray, 3}
+end
+
+function setElements(element, count)
+    local result = {}
+    
+    for i = 1, count do
+        table.insert(result, element)
     end
     
-    return 1
+    while #result < 5 do
+        local randomElement = math.random(1, 5)
+        if randomElement ~= element or (randomElement == element and count == 0) then
+            table.insert(result, randomElement)
+        end
+    end
+    
+    for i = #result, 2, -1 do
+        local j = math.random(i)
+        result[i], result[j] = result[j], result[i]
+    end
+    
+    return result
+end
+
+function setElementsNoMoreThanTwice()
+    local allElements = {1, 2, 3, 4, 5}
+    local result = {}
+    local elementCount = {}
+    for _, el in ipairs(allElements) do
+        elementCount[el] = 0
+    end
+
+    local function getRandomElement()
+        local validElements = {}
+        for _, el in ipairs(allElements) do
+            if elementCount[el] < 2 then
+                table.insert(validElements, el)
+            end
+        end
+
+        return validElements[math.random(#validElements)]
+    end
+
+    while #result < 5 do
+        local randomElement = getRandomElement()
+        table.insert(result, randomElement)
+        elementCount[randomElement] = elementCount[randomElement] + 1
+    end
+
+    for i = #result, 2, -1 do
+        local j = math.random(i)
+        result[i], result[j] = result[j], result[i]
+    end
+
+    return result
 end
 
 function calculateWinnings(result, bet)
@@ -275,14 +372,16 @@ colorOrder[4] = colors.purple
 colorOrder[5] = colors.orange
 
 weights = {45, 70, 85, 95, 100}
+weightsCombo = {45, 68, 79, 104, 116, 122, 137, 145, 149, 159, 164, 167, 172, 175, 176}
 
 coefTable3 = {1, 1, 1, 2, 2}
-coefTable4 = {1, 2, 4, 6, 8}
+coefTable4 = {2, 3, 4, 6, 8}
 coefTable5 = {3, 4, 5, 10, 16}
 
 maxBet = 100
 currency = "pocket_money:copper_coin"
 idleTimer = 1800 -- seconds = idleTimer / 2
+winChance = 50
 
 local speakers = table.pack(peripheral.find("speaker"))
 speaker1 = speakers[1]
