@@ -6,7 +6,7 @@ function initialScreen(bet)
     drawHeader(bet)
     drawArrows()
 
-    local col = {colors.orange, colors.red, colors.blue}
+    local col = {colors.orange, colors.purple, colors.blue}
     drawSingleColumn(6, 8, col)
     drawSingleColumn(10, 12, col)
     drawSingleColumn(14, 16, col)
@@ -90,12 +90,12 @@ function drawInsertBetScreen()
 end
 
 -- logic methods
-function spin(animationSleepTime, spinCountOffset)
+function spin(animationSleepTime, spinCountOffset, bet)
 
     local elements = {}
-    if isWin() then
+    if isWin(bet) then
         print("win")
-        local combo = weightedRandomCombo()
+        local combo = weightedRandomCombo(bet)
         print(combo[1] .. " " .. combo[2])
         elements = setElements(combo[1], combo[2])
     else
@@ -172,9 +172,31 @@ function spin(animationSleepTime, spinCountOffset)
     return {r1, r2, r3, r4, r5}
 end
 
-function isWin()
+function isWin(bet)
     local r = math.random(1, 100)
+    local winChance = 50
     print("rwin " .. r)
+
+    if bet > 0 and bet <= 3 then
+        winChance = winChances[1]
+    elseif bet > 3 and bet <= 5 then
+        winChance = winChances[2]
+    elseif bet > 5 and bet <= 8 then
+        winChance = winChances[3]
+    elseif bet > 8 and bet <= 10 then
+        winChance = winChances[4]
+    elseif bet > 10 and bet <= 15 then
+        winChance = winChances[5]
+    elseif bet > 15 and bet <= 30 then
+        winChance = winChances[6]
+    elseif bet > 30 and bet <= 60 then
+        winChance = winChances[7]
+    elseif bet > 60 and bet <= 100 then
+        winChance = winChances[8]
+    end        
+    
+    print("winChance" .. winChance)
+
     if r >= 1 and r <= winChance then
         return true
     end
@@ -182,9 +204,21 @@ function isWin()
     return false
 end
 
-function weightedRandomCombo()
-    local r = math.random(1, 176)
+function weightedRandomCombo(bet)
+    local r = math.random(1, 175)
     print("combo r: " .. r)
+    
+    -- if bet <= 5 then
+    --     r = math.min(r + 20, 170)
+    -- elseif bet <= 10 then
+    --     r = math.min(r + 15, 170)
+    -- elseif bet <= 20 then
+    --     r = math.min(r + 10, 170)
+    -- elseif bet <= 30 then
+    --     r = math.min(r + 5, 170)
+    -- end
+
+    print("bet modified combo r: " .. r)
     if r >= 1 and r < weightsCombo[1] then -- 1 to 44
         return {1, 3}
     elseif r >= weightsCombo[1] and r < weightsCombo[2] then -- 45 to 67
@@ -217,7 +251,7 @@ function weightedRandomCombo()
         return {5, 5}
     end
 
-    return {colors.lightGray, 3}
+    return {5, 3}
 end
 
 function setElements(element, count)
@@ -381,7 +415,7 @@ coefTable5 = {3, 4, 5, 10, 16}
 maxBet = 100
 currency = "pocket_money:copper_coin"
 idleTimer = 1800 -- seconds = idleTimer / 2
-winChance = 50
+winChances = {60, 50, 45, 40, 35, 30, 20, 10} -- if bet is between 0-3, 3-5, 5-8, 8-10, 10-15, 15-30, 30-60, 60-100
 
 local speakers = table.pack(peripheral.find("speaker"))
 speaker1 = speakers[1]
@@ -409,18 +443,19 @@ while true do
             print("bet .. " .. bet)
             print("extra .. " .. extra)
             deposit()
-            initialScreen(bet)
-
+            
             -- give back the extra
             if extra > 0 then
                 withdraw(extra, 64)
+                bet = 100
             end
+            initialScreen(bet)
 
-            reward = calculateWinnings(spin(0.05, 30), bet)
+            reward = calculateWinnings(spin(0.05, 30, bet), bet)
             if reward > 0 then
                 drawWinnerScreen()
                 speaker1.playSound("minecraft:entity.player.levelup", 3, 1)
-                withdraw(reward, 10)
+                withdraw(reward, 64)
             else
                 drawLoserScreen()
                 speaker1.playSound("minecraft:entity.player.death", 3, 1)
@@ -433,7 +468,7 @@ while true do
         end
     else
         if bet > 0 then
-            initialScreen(bet)
+            initialScreen(math.min(bet, 100))
             idleCounter = 0
         elseif idleMode then
             monitor = peripheral.find("monitor")
